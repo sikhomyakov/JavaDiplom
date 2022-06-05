@@ -7,11 +7,11 @@ import java.awt.image.WritableRaster;
 import java.io.IOException;
 import java.net.URL;
 
-public class TextGraphicsConverterImpl implements TextGraphicsConverter{
-
+public class TextGraphicsConverterImpl implements TextGraphicsConverter {
     private int maxWidth;
     private int maxHeight;
     private double maxRatio;
+    private TextColorSchema schema;
 
     @Override
     public String convert(String url) throws IOException, BadImageSizeException {
@@ -22,6 +22,10 @@ public class TextGraphicsConverterImpl implements TextGraphicsConverter{
         // соотношение сторон изображения, то вам здесь надо сделать эту проверку,
         // и, если картинка не подходит, выбросить исключение BadImageSizeException.
         // Чтобы получить ширину картинки, вызовите img.getWidth(), высоту - img.getHeight()
+        int width = img.getWidth();
+        int height = img.getHeight();
+        double ratio = (double) width / height;
+        if (ratio > maxRatio) throw new BadImageSizeException(ratio, maxRatio);
 
         // Если конвертеру выставили максимально допустимые ширину и/или высоту,
         // вам надо по ним и по текущим высоте и ширине вычислить новые высоту
@@ -34,8 +38,20 @@ public class TextGraphicsConverterImpl implements TextGraphicsConverter{
         // будет 100x10 (в 1.5 раза меньше).
         // Подумайте, какими действиями можно вычислить новые размеры.
         // Не получается? Спросите вашего руководителя по курсовой, поможем!
-        int newWidth = ???;
-        int newHeight = ???;
+        double widthCompression = (double) width / maxWidth;
+        if (width > maxWidth) {
+            width = (int) (width / widthCompression);
+            height = (int) (height / widthCompression);
+        }
+
+        double heightCompression = (double) height / maxHeight;
+        if (height > maxHeight) {
+            width = (int) (width / heightCompression);
+            height = (int) (height / heightCompression);
+        }
+        int newWidth = width;
+        int newHeight = height;
+
 
         // Теперь нам надо попросить картинку изменить свои размеры на новые.
         // Последний параметр означает, что мы просим картинку плавно сузиться
@@ -82,12 +98,14 @@ public class TextGraphicsConverterImpl implements TextGraphicsConverter{
         // получить степень белого пикселя (int color выше) и по ней
         // получить соответствующий символ c. Логикой превращения цвета
         // в символ будет заниматься другой объект, который мы рассмотрим ниже
-        for ??? {
-            for ??? {
+        StringBuilder result = new StringBuilder();
+        for (int h = 0; h < height; h++) {
+            for (int w = 0; w < width; w++) {
                 int color = bwRaster.getPixel(w, h, new int[3])[0];
                 char c = schema.convert(color);
-            ??? //запоминаем символ c, например, в двумерном массиве или как-то ещё на ваше усмотрение
+                result.append(c);
             }
+            result.append("\n");
         }
 
         // Осталось собрать все символы в один большой текст
@@ -95,26 +113,27 @@ public class TextGraphicsConverterImpl implements TextGraphicsConverter{
         // каждый пиксель превращать в два повторяющихся символа, полученных
         // от схемы.
 
-        return ???; // Возвращаем собранный текст.
+        return result.toString();
     }
 
     @Override
     public void setMaxWidth(int width) {
-
+        this.maxWidth = width;
     }
 
     @Override
     public void setMaxHeight(int height) {
-
+        this.maxHeight = height;
     }
 
     @Override
     public void setMaxRatio(double maxRatio) {
-
+        this.maxRatio = maxRatio;
     }
 
     @Override
     public void setTextColorSchema(TextColorSchema schema) {
-
+        this.schema = schema;
     }
+
 }
