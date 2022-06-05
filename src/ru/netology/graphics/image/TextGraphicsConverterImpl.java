@@ -11,7 +11,7 @@ public class TextGraphicsConverterImpl implements TextGraphicsConverter {
     private int maxWidth;
     private int maxHeight;
     private double maxRatio;
-    private TextColorSchema schema;
+    private TextColorSchema schema = new TextColorSchemaImpl();
 
     @Override
     public String convert(String url) throws IOException, BadImageSizeException {
@@ -104,6 +104,8 @@ public class TextGraphicsConverterImpl implements TextGraphicsConverter {
                 int color = bwRaster.getPixel(w, h, new int[3])[0];
                 char c = schema.convert(color);
                 result.append(c);
+                result.append(" ");
+
             }
             result.append("\n");
         }
